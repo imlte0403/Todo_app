@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app/widgets/choice_chip.dart';
 import '../models/todo.dart';
 import '../utils/todo_helpers.dart';
 import '../theme/app_theme.dart';
+import '../utils/constants.dart';
 
 class AddTodoDialog extends StatefulWidget {
-  final Todo? todo; // 수정 시 사용
+  final Todo? todo; // For editing
 
   const AddTodoDialog({super.key, this.todo});
 
@@ -24,7 +26,6 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
   void initState() {
     super.initState();
     if (widget.todo != null) {
-      // 수정 모드
       _taskController.text = widget.todo!.task;
       _descriptionController.text = widget.todo!.description ?? '';
       _selectedCategory = widget.todo!.category;
@@ -46,280 +47,167 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
     final isEditing = widget.todo != null;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusExtraLarge)),
       child: Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(AppDimensions.paddingExtraLarge),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isEditing ? 'Edit Todo' : 'New Todo',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: colors?.textPrimary ?? Colors.black87,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.paddingExtraLarge),
+
+              TextField(
+                key: WidgetKeys.taskTextField,
+                controller: _taskController,
+                decoration: InputDecoration(
+                  labelText: 'Task Title',
+                  hintText: 'Enter your task',
+                  prefixIcon: Icon(Icons.task, color: colors?.primary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                  ),
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: AppDimensions.paddingLarge),
+
+              TextField(
+                key: WidgetKeys.descriptionTextField,
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  labelText: 'Description (Optional)',
+                  hintText: 'Add more details',
+                  prefixIcon: Icon(
+                    Icons.description,
+                    color: colors?.textSecondary,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                  ),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: AppDimensions.paddingLarge),
+
+              _buildDateTimePicker(context, colors),
+              const SizedBox(height: AppDimensions.paddingLarge),
+
+              _buildSectionTitle('Category', colors),
+              const SizedBox(height: AppDimensions.paddingMedium),
+              Wrap(
+                spacing: AppDimensions.paddingMedium,
+                runSpacing: AppDimensions.paddingMedium,
+                children: TodoCategory.values.map((category) {
+                  final info = TodoHelpers.getCategoryInfo(category);
+                  return ChoiceChip<TodoCategory>(
+                    value: category,
+                    selectedValue: _selectedCategory,
+                    onSelected: (c) => setState(() => _selectedCategory = c),
+                    label: info.name,
+                    icon: info.icon,
+                    color: info.color,
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: AppDimensions.paddingLarge),
+
+              _buildSectionTitle('Priority', colors),
+              const SizedBox(height: AppDimensions.paddingMedium),
+              Wrap(
+                spacing: AppDimensions.paddingMedium,
+                runSpacing: AppDimensions.paddingMedium,
+                children: TodoPriority.values.map((priority) {
+                  final info = TodoHelpers.getPriorityInfo(priority);
+                  return ChoiceChip<TodoPriority>(
+                    value: priority,
+                    selectedValue: _selectedPriority,
+                    onSelected: (p) => setState(() => _selectedPriority = p),
+                    label: info.name,
+                    icon: info.icon,
+                    color: info.color,
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: AppDimensions.paddingExtraLarge),
+
+              _buildActionButtons(context, isEditing, colors),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, AppColors? colors) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: colors?.textPrimary,
+      ),
+    );
+  }
+
+  Widget _buildDateTimePicker(BuildContext context, AppColors? colors) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildPickerContainer(
+            context,
+            colors,
+            icon: Icons.calendar_today,
+            text: _selectedDueDate != null
+                ? TodoHelpers.formatDate(_selectedDueDate!)
+                : 'Select Date',
+            onTap: () => _selectDueDate(context),
+          ),
+        ),
+        const SizedBox(width: AppDimensions.paddingMedium),
+        Expanded(
+          child: _buildPickerContainer(
+            context,
+            colors,
+            icon: Icons.schedule,
+            text: _selectedDueDate != null
+                ? TodoHelpers.formatTime(_selectedDueDate!)
+                : 'Select Time',
+            onTap: () => _selectDueTime(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPickerContainer(BuildContext context, AppColors? colors, {required IconData icon, required String text, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingLarge),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: colors?.border ?? Colors.grey.shade300,
+          ),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+        ),
+        child: Row(
           children: [
-            // 제목
+            Icon(icon, color: colors?.textSecondary, size: 20),
+            const SizedBox(width: AppDimensions.paddingMedium),
             Text(
-              isEditing ? '할 일 수정' : '새로운 할 일',
+              text,
               style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: colors?.textPrimary ?? Colors.black87,
+                color: _selectedDueDate != null ? colors?.textPrimary : colors?.textSecondary,
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // 할 일 제목 입력
-            TextField(
-              controller: _taskController,
-              decoration: InputDecoration(
-                labelText: '할 일 제목',
-                hintText: '할 일을 입력하세요',
-                prefixIcon: Icon(Icons.task, color: colors?.primary),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 16),
-
-            // 설명 입력
-            TextField(
-              controller: _descriptionController,
-              decoration: InputDecoration(
-                labelText: '설명 (선택사항)',
-                hintText: '추가 설명을 입력하세요',
-                prefixIcon: Icon(
-                  Icons.description,
-                  color: colors?.textSecondary,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-
-            // 마감일 선택
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDueDate(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: colors?.border ?? Colors.grey.shade300,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            color: colors?.textSecondary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _selectedDueDate != null
-                                ? TodoHelpers.formatDate(_selectedDueDate!)
-                                : '마감일 선택',
-                            style: TextStyle(
-                              color: _selectedDueDate != null
-                                  ? colors?.textPrimary
-                                  : colors?.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDueTime(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: colors?.border ?? Colors.grey.shade300,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.schedule,
-                            color: colors?.textSecondary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _selectedDueDate != null
-                                ? TodoHelpers.formatTime(_selectedDueDate!)
-                                : '시간 선택',
-                            style: TextStyle(
-                              color: _selectedDueDate != null
-                                  ? colors?.textPrimary
-                                  : colors?.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // 카테고리 선택
-            Text(
-              '카테고리',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: colors?.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: TodoCategory.values.map((category) {
-                final categoryInfo = TodoHelpers.getCategoryInfo(category);
-                final isSelected = _selectedCategory == category;
-
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedCategory = category),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? categoryInfo.color
-                          : categoryInfo.color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected
-                            ? categoryInfo.color
-                            : categoryInfo.color.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          categoryInfo.icon,
-                          size: 16,
-                          color: isSelected ? Colors.white : categoryInfo.color,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          categoryInfo.name,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: isSelected
-                                ? Colors.white
-                                : categoryInfo.color,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-
-            // 우선순위 선택
-            Text(
-              '우선순위',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: colors?.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: TodoPriority.values.map((priority) {
-                final priorityInfo = TodoHelpers.getPriorityInfo(priority);
-                final isSelected = _selectedPriority == priority;
-
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedPriority = priority),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? priorityInfo.color
-                          : priorityInfo.color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected
-                            ? priorityInfo.color
-                            : priorityInfo.color.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          priorityInfo.icon,
-                          size: 16,
-                          color: isSelected ? Colors.white : priorityInfo.color,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          priorityInfo.name,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: isSelected
-                                ? Colors.white
-                                : priorityInfo.color,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 24),
-
-            // 버튼들
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('취소'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _saveTodo,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colors?.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(isEditing ? '수정' : '저장'),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -327,12 +215,40 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
     );
   }
 
+  Widget _buildActionButtons(BuildContext context, bool isEditing, AppColors? colors) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextButton(
+            key: WidgetKeys.cancelTodoButton,
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ),
+        const SizedBox(width: AppDimensions.paddingMedium),
+        Expanded(
+          child: ElevatedButton(
+            key: WidgetKeys.saveTodoButton,
+            onPressed: _saveTodo,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colors?.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+              ),
+            ),
+            child: Text(isEditing ? 'Update' : 'Save'),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _selectDueDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDueDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
     );
 
     if (picked != null) {
@@ -341,8 +257,8 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
           picked.year,
           picked.month,
           picked.day,
-          _selectedDueDate?.hour ?? 0,
-          _selectedDueDate?.minute ?? 0,
+          _selectedDueDate?.hour ?? DateTime.now().hour,
+          _selectedDueDate?.minute ?? DateTime.now().minute,
         );
       });
     }
@@ -371,17 +287,21 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
 
   void _saveTodo() {
     final task = _taskController.text.trim();
-    if (task.isEmpty) return;
+    if (task.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Task title cannot be empty.')),
+      );
+      return;
+    }
 
     final description = _descriptionController.text.trim();
-    final finalDescription = description.isEmpty ? null : description;
 
     Navigator.pop(context, {
-      'task': task,
-      'description': finalDescription,
-      'category': _selectedCategory,
-      'priority': _selectedPriority,
-      'dueDate': _selectedDueDate,
+      StringConstants.taskResult: task,
+      StringConstants.descriptionResult: description.isNotEmpty ? description : null,
+      StringConstants.categoryResult: _selectedCategory,
+      StringConstants.priorityResult: _selectedPriority,
+      StringConstants.dueDateResult: _selectedDueDate,
     });
   }
 }

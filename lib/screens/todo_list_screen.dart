@@ -1,12 +1,11 @@
-// lib/screens/todo_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app/screens/statistics_screen.dart';
+import 'package:todo_app/utils/constants.dart';
 import '../../providers/todo_provider.dart';
 import '../../models/todo.dart';
 import '../widgets/todo_card.dart';
 import '../widgets/add_todo_dialog.dart';
-import '../theme/app_theme.dart';
 import 'package:todo_app/widgets/custom_date_picker.dart';
 
 class TodoListScreen extends StatefulWidget {
@@ -25,12 +24,13 @@ class _TodoListScreenState extends State<TodoListScreen> {
     );
 
     if (result != null) {
-      final task = result['task'] as String;
-      final description = result['description'] as String?;
-      final category = result['category'] as TodoCategory;
-      final priority = result['priority'] as TodoPriority;
-      final dueDate = result['dueDate'] as DateTime?;
+      final task = result[StringConstants.taskResult] as String;
+      final description = result[StringConstants.descriptionResult] as String?;
+      final category = result[StringConstants.categoryResult] as TodoCategory;
+      final priority = result[StringConstants.priorityResult] as TodoPriority;
+      final dueDate = result[StringConstants.dueDateResult] as DateTime?;
 
+      if (!mounted) return;
       context.read<TodoProvider>().addTodo(
         task,
         description: description,
@@ -48,12 +48,13 @@ class _TodoListScreenState extends State<TodoListScreen> {
     );
 
     if (result != null) {
-      final task = result['task'] as String;
-      final description = result['description'] as String?;
-      final category = result['category'] as TodoCategory;
-      final priority = result['priority'] as TodoPriority;
-      final dueDate = result['dueDate'] as DateTime?;
+      final task = result[StringConstants.taskResult] as String;
+      final description = result[StringConstants.descriptionResult] as String?;
+      final category = result[StringConstants.categoryResult] as TodoCategory;
+      final priority = result[StringConstants.priorityResult] as TodoPriority;
+      final dueDate = result[StringConstants.dueDateResult] as DateTime?;
 
+      if (!mounted) return;
       context.read<TodoProvider>().updateTodo(
         todo.id,
         task: task,
@@ -70,15 +71,15 @@ class _TodoListScreenState extends State<TodoListScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('할 일 삭제'),
-          content: Text('"${todo.task}"를 삭제하시겠습니까?'),
+          title: const Text('Delete Todo'),
+          content: Text('Are you sure you want to delete "${todo.task}"?'),
           actions: [
             TextButton(
-              child: const Text('취소'),
+              child: const Text('Cancel'),
               onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
-              child: const Text('삭제'),
+              child: const Text('Delete'),
               onPressed: () {
                 context.read<TodoProvider>().deleteTodo(todo.id);
                 Navigator.of(context).pop();
@@ -97,6 +98,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
         title: const Text('To-Do List'),
         actions: [
           IconButton(
+            key: WidgetKeys.statsScreenButton,
             icon: const Icon(Icons.bar_chart),
             onPressed: () {
               Navigator.push(
@@ -112,26 +114,29 @@ class _TodoListScreenState extends State<TodoListScreen> {
               }
 
               return PopupMenuButton<String>(
+                key: WidgetKeys.moreActionsButton,
                 onSelected: (value) {
                   switch (value) {
-                    case 'toggle_all':
+                    case StringConstants.toggleAll:
                       final allCompleted = todoProvider.todosForSelectedDate
                           .every((todo) => todo.isDone);
                       todoProvider.toggleAllTodos(!allCompleted);
                       break;
-                    case 'clear_completed':
+                    case StringConstants.clearCompleted:
                       todoProvider.clearCompletedTodos();
                       break;
                   }
                 },
                 itemBuilder: (BuildContext context) => [
                   const PopupMenuItem<String>(
-                    value: 'toggle_all',
-                    child: Text('모두 완료/해제'),
+                    key: WidgetKeys.toggleAllMenuItem,
+                    value: StringConstants.toggleAll,
+                    child: Text('Toggle All'),
                   ),
                   const PopupMenuItem<String>(
-                    value: 'clear_completed',
-                    child: Text('완료된 항목 삭제'),
+                    key: WidgetKeys.clearCompletedMenuItem,
+                    value: StringConstants.clearCompleted,
+                    child: Text('Clear Completed'),
                   ),
                 ],
               );
@@ -147,48 +152,18 @@ class _TodoListScreenState extends State<TodoListScreen> {
 
           return Column(
             children: [
-              // 달력
               const CustomDatePicker(),
-
               const Divider(),
-
-              // 할 일 목록
               Expanded(
                 child: todoProvider.todosForSelectedDate.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.task_alt,
-                              size: 64,
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              '할 일이 없습니다',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '새로운 할 일을 추가해보세요!',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
+                    ? _buildEmptyState(context)
                     : ListView.builder(
+                        key: WidgetKeys.todoList,
                         itemCount: todoProvider.todosForSelectedDate.length,
                         itemBuilder: (context, index) {
                           final todo = todoProvider.todosForSelectedDate[index];
                           return TodoCard(
+                            key: Key(todo.id), // Unique key for each todo item
                             todo: todo,
                             todoProvider: todoProvider,
                             onEdit: () => _showEditDialog(todo),
@@ -202,10 +177,43 @@ class _TodoListScreenState extends State<TodoListScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        key: WidgetKeys.addTodoFab,
         onPressed: _addTodo,
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.task_alt,
+            size: 64,
+            color: Theme.of(context).colorScheme.outline,
+          ),
+          const SizedBox(height: AppDimensions.paddingLarge),
+          Text(
+            'No todos yet',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.paddingMedium),
+          Text(
+            'Add a new todo to get started!',
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ],
       ),
     );
   }

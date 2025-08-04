@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app/utils/constants.dart';
 import '../theme/app_theme.dart';
 
 class StatisticsCards extends StatelessWidget {
@@ -18,39 +19,36 @@ class StatisticsCards extends StatelessWidget {
     final colors = Theme.of(context).extension<AppColors>()!;
 
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(AppDimensions.paddingLarge),
       child: Row(
         children: [
           Expanded(
             child: _buildStatCard(
               context,
-              '전체',
+              'Total',
               totalTodos.toString(),
               Icons.list_alt_rounded,
               colors.primary,
-              '총 할 일 수',
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppDimensions.paddingMedium),
           Expanded(
             child: _buildStatCard(
               context,
-              '완료',
+              'Completed',
               completedTodos.toString(),
               Icons.check_circle_rounded,
               colors.success,
-              '완료된 할 일',
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppDimensions.paddingMedium),
           Expanded(
             child: _buildStatCard(
               context,
-              '진행률',
+              'Completion',
               '${(completionRate * 100).toInt()}%',
               Icons.trending_up_rounded,
               colors.accent,
-              '완료 비율',
             ),
           ),
         ],
@@ -64,19 +62,18 @@ class StatisticsCards extends StatelessWidget {
     String value,
     IconData icon,
     Color color,
-    String subtitle,
   ) {
     final colors = Theme.of(context).extension<AppColors>()!;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimensions.paddingLarge),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
         border: Border.all(color: colors.border, width: 1),
         boxShadow: [
           BoxShadow(
-            color: colors.textPrimary.withOpacity(0.05),
+            color: colors.textPrimary.withAlpha(13),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -85,31 +82,25 @@ class StatisticsCards extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 아이콘
           Container(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: color.withAlpha(26),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
             ),
             child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(height: 12),
-
-          // 값
+          const SizedBox(height: AppDimensions.paddingMedium),
           Text(
             value,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: color,
-              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 4),
-
-          // 제목
+          const SizedBox(height: AppDimensions.paddingSmall),
           Text(
             title,
             style: TextStyle(
@@ -117,13 +108,6 @@ class StatisticsCards extends StatelessWidget {
               fontWeight: FontWeight.w600,
               color: colors.textPrimary,
             ),
-          ),
-          const SizedBox(height: 2),
-
-          // 부제목
-          Text(
-            subtitle,
-            style: TextStyle(fontSize: 11, color: colors.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
