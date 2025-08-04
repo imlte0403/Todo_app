@@ -47,6 +47,15 @@ class _TodoCardState extends State<TodoCard>
     super.dispose();
   }
 
+  // 완료 상태 헬퍼 메서드들
+  bool get _isDone => widget.todo.isDone;
+  double get _opacity => TodoHelpers.getCompletedOpacity(_isDone);
+  double get _tagOpacity => TodoHelpers.getCompletedTagOpacity(_isDone);
+  Color _getCompletedColor(Color? originalColor) => 
+      TodoHelpers.getCompletedColor(originalColor ?? Colors.black87, _isDone);
+  Color _getCompletedIconColor(Color? originalColor) => 
+      TodoHelpers.getCompletedIconColor(originalColor ?? Colors.grey.shade600, _isDone);
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>();
@@ -56,14 +65,14 @@ class _TodoCardState extends State<TodoCard>
     return ScaleTransition(
       scale: _scaleAnimation,
       child: Opacity(
-        opacity: widget.todo.isDone ? 0.7 : 1.0, // 완료된 할 일은 투명도 적용
+        opacity: _opacity,
         child: Container(
           margin: const EdgeInsets.symmetric(
             horizontal: AppDimensions.paddingLarge,
             vertical: AppDimensions.paddingMedium,
           ),
           decoration: BoxDecoration(
-            color: widget.todo.isDone ? colors?.card : colors?.surface,
+            color: _isDone ? colors?.card : colors?.surface,
             borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
             boxShadow: [
               BoxShadow(
@@ -123,16 +132,16 @@ class _TodoCardState extends State<TodoCard>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: widget.todo.isDone
+            color: _isDone
                 ? (colors?.primary ?? Theme.of(context).colorScheme.primary)
                 : Colors.grey.shade300,
             width: 2,
           ),
-          color: widget.todo.isDone
+          color: _isDone
               ? (colors?.primary ?? Theme.of(context).colorScheme.primary)
               : Colors.transparent,
         ),
-        child: widget.todo.isDone
+        child: _isDone
             ? const Icon(Icons.check, size: 16, color: Colors.white)
             : null,
       ),
@@ -146,12 +155,8 @@ class _TodoCardState extends State<TodoCard>
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          decoration: widget.todo.isDone ? TextDecoration.lineThrough : null,
-          color: widget.todo.isDone
-              ? Colors
-                    .grey
-                    .shade500 // 완료된 할 일은 회색
-              : colors?.textPrimary,
+          decoration: _isDone ? TextDecoration.lineThrough : null,
+          color: _getCompletedColor(colors?.textPrimary),
         ),
       ),
     );
@@ -164,20 +169,12 @@ class _TodoCardState extends State<TodoCard>
         IconButton(
           icon: const Icon(Icons.edit, size: 20),
           onPressed: widget.onEdit,
-          color: widget.todo.isDone
-              ? Colors
-                    .grey
-                    .shade400 // 완료된 할 일의 버튼도 회색
-              : Colors.grey.shade600,
+          color: _getCompletedIconColor(Colors.grey.shade600),
         ),
         IconButton(
           icon: const Icon(Icons.delete, size: 20),
           onPressed: widget.onDelete,
-          color: widget.todo.isDone
-              ? Colors
-                    .red
-                    .shade300 // 완료된 할 일의 삭제 버튼도 연하게
-              : Colors.red.shade400,
+          color: _getCompletedIconColor(Colors.red.shade400),
         ),
       ],
     );
@@ -194,33 +191,30 @@ class _TodoCardState extends State<TodoCard>
   }
 
   Widget _buildTag(IconData icon, String name, Color color) {
-    // 완료된 할 일의 태그는 투명도 적용
-    final opacity = widget.todo.isDone ? 0.5 : 1.0;
-
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.paddingMedium,
         vertical: AppDimensions.paddingSmall,
       ),
       decoration: BoxDecoration(
-        color: color.withAlpha((26 * opacity).round()),
+        color: color.withAlpha((26 * _tagOpacity).round()),
         borderRadius: BorderRadius.circular(AppDimensions.radiusSmall),
         border: Border.all(
-          color: color.withAlpha((77 * opacity).round()),
+          color: color.withAlpha((77 * _tagOpacity).round()),
           width: 1,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color.withValues(alpha: opacity)),
+          Icon(icon, size: 12, color: color.withValues(alpha: _tagOpacity)),
           const SizedBox(width: AppDimensions.paddingSmall),
           Text(
             name,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: color.withValues(alpha: opacity),
+              color: color.withValues(alpha: _tagOpacity),
             ),
           ),
         ],
@@ -234,22 +228,14 @@ class _TodoCardState extends State<TodoCard>
         Icon(
           icon,
           size: 14,
-          color: widget.todo.isDone
-              ? Colors
-                    .grey
-                    .shade400 // 완료된 할 일의 아이콘도 회색
-              : colors?.textSecondary,
+          color: _getCompletedIconColor(colors?.textSecondary),
         ),
         const SizedBox(width: AppDimensions.paddingSmall),
         Text(
           text,
           style: TextStyle(
             fontSize: 12,
-            color: widget.todo.isDone
-                ? Colors
-                      .grey
-                      .shade400 // 완료된 할 일의 텍스트도 회색
-                : colors?.textSecondary,
+            color: _getCompletedIconColor(colors?.textSecondary),
           ),
         ),
       ],
@@ -263,11 +249,7 @@ class _TodoCardState extends State<TodoCard>
         description,
         style: TextStyle(
           fontSize: 12,
-          color: widget.todo.isDone
-              ? Colors
-                    .grey
-                    .shade400 // 완료된 할 일의 설명도 회색
-              : colors?.textSecondary,
+          color: _getCompletedColor(colors?.textSecondary),
           fontStyle: FontStyle.italic,
         ),
         maxLines: 2,

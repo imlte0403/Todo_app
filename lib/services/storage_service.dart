@@ -94,11 +94,6 @@ class StorageService {
     }
   }
 
-  // Date normalization (remove time information)
-  DateTime _normalizeDate(DateTime date) {
-    return DateTime.utc(date.year, date.month, date.day);
-  }
-
   // Convert DateTime to String
   String _dateToString(DateTime date) {
     return date.toIso8601String().split('T')[0]; // YYYY-MM-DD format

@@ -17,6 +17,11 @@ class AppConstants {
   static const double mediumOpacity = 0.3;
   static const double shadowOpacity = 0.05;
 
+  // 완료된 할 일 관련
+  static const double completedCardOpacity = 0.7;
+  static const double completedTagOpacity = 0.5;
+  static const double completedTextOpacity = 0.6;
+
   // 날짜 관련
   static const int maxDaysInFuture = 365;
   static const int maxDaysInPast = 30;

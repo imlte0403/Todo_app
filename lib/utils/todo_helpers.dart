@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/todo.dart';
+import '../constants/app_constants.dart';
 
 class TodoHelpers {
   // 카테고리별 정보
@@ -86,18 +87,18 @@ class TodoHelpers {
   static List<Todo> sortTodosByPriority(List<Todo> todos) {
     final sortedTodos = List<Todo>.from(todos);
     sortedTodos.sort((a, b) {
-      // 1. 우선순위로 정렬 (높은 우선순위가 먼저)
+      // 1. 완료 상태로 정렬 (미완료가 먼저)
+      if (a.isDone != b.isDone) {
+        return a.isDone ? 1 : -1;
+      }
+
+      // 2. 완료 상태가 같으면 우선순위로 정렬 (높은 우선순위가 먼저)
       final priorityComparison = comparePriority(a.priority, b.priority);
       if (priorityComparison != 0) {
         return priorityComparison;
       }
 
-      // 2. 우선순위가 같으면 완료 상태로 정렬 (미완료가 먼저)
-      if (a.isDone != b.isDone) {
-        return a.isDone ? 1 : -1;
-      }
-
-      // 3. 완료 상태가 같으면 생성 시간으로 정렬 (최신이 먼저)
+      // 3. 우선순위가 같으면 생성 시간으로 정렬 (최신이 먼저)
       return b.createdAt.compareTo(a.createdAt);
     });
 
@@ -126,6 +127,27 @@ class TodoHelpers {
     final hour = time.hour.toString().padLeft(2, '0');
     final minute = time.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
+  }
+
+  // 완료된 할 일 색상 처리
+  static Color getCompletedColor(Color originalColor, bool isDone) {
+    return isDone ? Colors.grey.shade500 : originalColor;
+  }
+
+  // 완료된 할 일 아이콘 색상 처리
+  static Color getCompletedIconColor(Color originalColor, bool isDone) {
+    return isDone ? Colors.grey.shade400 : originalColor;
+  }
+
+  // 완료된 할 일 투명도 처리
+  static double getCompletedOpacity(bool isDone, {double? completedOpacity}) {
+    final opacity = completedOpacity ?? AppConstants.completedCardOpacity;
+    return isDone ? opacity : 1.0;
+  }
+
+  // 완료된 할 일 태그 투명도 처리
+  static double getCompletedTagOpacity(bool isDone) {
+    return isDone ? AppConstants.completedTagOpacity : 1.0;
   }
 }
 
