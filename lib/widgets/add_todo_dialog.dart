@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:todo_app/widgets/choice_chip.dart';
 import '../models/todo.dart';
 import '../utils/todo_helpers.dart';
 import '../theme/app_theme.dart';
@@ -47,7 +46,9 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
     final isEditing = widget.todo != null;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusExtraLarge)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusExtraLarge),
+      ),
       child: Container(
         padding: const EdgeInsets.all(AppDimensions.paddingExtraLarge),
         child: SingleChildScrollView(
@@ -73,7 +74,9 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
                   hintText: 'Enter your task',
                   prefixIcon: Icon(Icons.task, color: colors?.primary),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusMedium,
+                    ),
                   ),
                 ),
                 autofocus: true,
@@ -91,7 +94,9 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
                     color: colors?.textSecondary,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusMedium,
+                    ),
                   ),
                 ),
                 maxLines: 3,
@@ -108,13 +113,47 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
                 runSpacing: AppDimensions.paddingMedium,
                 children: TodoCategory.values.map((category) {
                   final info = TodoHelpers.getCategoryInfo(category);
-                  return ChoiceChip<TodoCategory>(
-                    value: category,
-                    selectedValue: _selectedCategory,
-                    onSelected: (c) => setState(() => _selectedCategory = c),
-                    label: info.name,
-                    icon: info.icon,
-                    color: info.color,
+                  final isSelected = _selectedCategory == category;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedCategory = category),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.paddingLarge,
+                        vertical: AppDimensions.paddingMedium,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? info.color
+                            : info.color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusLarge,
+                        ),
+                        border: Border.all(
+                          color: isSelected
+                              ? info.color
+                              : info.color.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            info.icon,
+                            size: 16,
+                            color: isSelected ? Colors.white : info.color,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            info.name,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: isSelected ? Colors.white : info.color,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }).toList(),
               ),
@@ -127,13 +166,47 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
                 runSpacing: AppDimensions.paddingMedium,
                 children: TodoPriority.values.map((priority) {
                   final info = TodoHelpers.getPriorityInfo(priority);
-                  return ChoiceChip<TodoPriority>(
-                    value: priority,
-                    selectedValue: _selectedPriority,
-                    onSelected: (p) => setState(() => _selectedPriority = p),
-                    label: info.name,
-                    icon: info.icon,
-                    color: info.color,
+                  final isSelected = _selectedPriority == priority;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedPriority = priority),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.paddingLarge,
+                        vertical: AppDimensions.paddingMedium,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? info.color
+                            : info.color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusLarge,
+                        ),
+                        border: Border.all(
+                          color: isSelected
+                              ? info.color
+                              : info.color.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            info.icon,
+                            size: 16,
+                            color: isSelected ? Colors.white : info.color,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            info.name,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: isSelected ? Colors.white : info.color,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }).toList(),
               ),
@@ -188,25 +261,36 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
     );
   }
 
-  Widget _buildPickerContainer(BuildContext context, AppColors? colors, {required IconData icon, required String text, required VoidCallback onTap}) {
+  Widget _buildPickerContainer(
+    BuildContext context,
+    AppColors? colors, {
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(AppDimensions.paddingLarge),
         decoration: BoxDecoration(
-          border: Border.all(
-            color: colors?.border ?? Colors.grey.shade300,
-          ),
+          border: Border.all(color: colors?.border ?? Colors.grey.shade300),
           borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
         ),
         child: Row(
           children: [
             Icon(icon, color: colors?.textSecondary, size: 20),
             const SizedBox(width: AppDimensions.paddingMedium),
-            Text(
-              text,
-              style: TextStyle(
-                color: _selectedDueDate != null ? colors?.textPrimary : colors?.textSecondary,
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: _selectedDueDate != null
+                      ? colors?.textPrimary
+                      : colors?.textSecondary,
+                  fontSize: 14,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
           ],
@@ -215,7 +299,11 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, bool isEditing, AppColors? colors) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    bool isEditing,
+    AppColors? colors,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -298,7 +386,9 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
 
     Navigator.pop(context, {
       StringConstants.taskResult: task,
-      StringConstants.descriptionResult: description.isNotEmpty ? description : null,
+      StringConstants.descriptionResult: description.isNotEmpty
+          ? description
+          : null,
       StringConstants.categoryResult: _selectedCategory,
       StringConstants.priorityResult: _selectedPriority,
       StringConstants.dueDateResult: _selectedDueDate,

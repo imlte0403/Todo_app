@@ -126,6 +126,8 @@ class AppTheme {
       ),
       extensions: [colors],
 
+      // 폰트 설정 (한글 지원)
+      fontFamily: 'Apple SD Gothic Neo', // macOS 한글 폰트
       // 앱바 테마
       appBarTheme: AppBarTheme(
         centerTitle: true,
