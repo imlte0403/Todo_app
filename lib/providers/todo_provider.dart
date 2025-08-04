@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/todo.dart';
 import '../services/storage_service.dart';
+import '../utils/todo_helpers.dart';
 
 class TodoProvider extends ChangeNotifier {
   final StorageService _storageService = StorageService.instance;
@@ -24,20 +25,13 @@ class TodoProvider extends ChangeNotifier {
   DateTime get selectedDate => _selectedDate;
   bool get isLoading => _isLoading;
 
-  // 선택된 날짜의 할 일 목록
+  // 선택된 날짜의 할 일 목록 (우선순위별 정렬)
   List<Todo> get todosForSelectedDate {
     final normalizedDate = _normalizeDate(_selectedDate);
     final todos = _todos[normalizedDate] ?? [];
-    todos.sort((a, b) {
-      if (a.isDone == b.isDone) {
-        return 0;
-      } else if (a.isDone) {
-        return 1;
-      } else {
-        return -1;
-      }
-    });
-    return todos;
+
+    // TodoHelpers의 정렬 함수 사용
+    return TodoHelpers.sortTodosByPriority(todos);
   }
 
   // 완료된 할 일 개수

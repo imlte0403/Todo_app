@@ -23,7 +23,8 @@ class TodoCard extends StatefulWidget {
   State<TodoCard> createState() => _TodoCardState();
 }
 
-class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin {
+class _TodoCardState extends State<TodoCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
 
@@ -54,37 +55,45 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
 
     return ScaleTransition(
       scale: _scaleAnimation,
-      child: Container(
-        margin: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.paddingLarge,
-          vertical: AppDimensions.paddingMedium,
-        ),
-        decoration: BoxDecoration(
-          color: widget.todo.isDone ? colors?.card : colors?.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(13),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.paddingLarge),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildCardHeader(context, colors),
-              const SizedBox(height: AppDimensions.paddingMedium),
-              _buildTags(categoryInfo, priorityInfo),
-              if (widget.todo.dueDate != null || (widget.todo.description?.isNotEmpty ?? false))
-                const SizedBox(height: AppDimensions.paddingMedium),
-              if (widget.todo.dueDate != null)
-                _buildInfoRow(Icons.event, TodoHelpers.formatDate(widget.todo.dueDate!), colors),
-              if (widget.todo.description?.isNotEmpty ?? false)
-                _buildDescription(widget.todo.description!, colors),
+      child: Opacity(
+        opacity: widget.todo.isDone ? 0.7 : 1.0, // 완료된 할 일은 투명도 적용
+        child: Container(
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.paddingLarge,
+            vertical: AppDimensions.paddingMedium,
+          ),
+          decoration: BoxDecoration(
+            color: widget.todo.isDone ? colors?.card : colors?.surface,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(13),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
             ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.paddingLarge),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildCardHeader(context, colors),
+                const SizedBox(height: AppDimensions.paddingMedium),
+                _buildTags(categoryInfo, priorityInfo),
+                if (widget.todo.dueDate != null ||
+                    (widget.todo.description?.isNotEmpty ?? false))
+                  const SizedBox(height: AppDimensions.paddingMedium),
+                if (widget.todo.dueDate != null)
+                  _buildInfoRow(
+                    Icons.event,
+                    TodoHelpers.formatDate(widget.todo.dueDate!),
+                    colors,
+                  ),
+                if (widget.todo.description?.isNotEmpty ?? false)
+                  _buildDescription(widget.todo.description!, colors),
+              ],
+            ),
           ),
         ),
       ),
@@ -138,7 +147,11 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
           fontSize: 16,
           fontWeight: FontWeight.w600,
           decoration: widget.todo.isDone ? TextDecoration.lineThrough : null,
-          color: widget.todo.isDone ? colors?.textSecondary : colors?.textPrimary,
+          color: widget.todo.isDone
+              ? Colors
+                    .grey
+                    .shade500 // 완료된 할 일은 회색
+              : colors?.textPrimary,
         ),
       ),
     );
@@ -151,12 +164,20 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
         IconButton(
           icon: const Icon(Icons.edit, size: 20),
           onPressed: widget.onEdit,
-          color: Colors.grey.shade600,
+          color: widget.todo.isDone
+              ? Colors
+                    .grey
+                    .shade400 // 완료된 할 일의 버튼도 회색
+              : Colors.grey.shade600,
         ),
         IconButton(
           icon: const Icon(Icons.delete, size: 20),
           onPressed: widget.onDelete,
-          color: Colors.red.shade400,
+          color: widget.todo.isDone
+              ? Colors
+                    .red
+                    .shade300 // 완료된 할 일의 삭제 버튼도 연하게
+              : Colors.red.shade400,
         ),
       ],
     );
@@ -173,27 +194,33 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
   }
 
   Widget _buildTag(IconData icon, String name, Color color) {
+    // 완료된 할 일의 태그는 투명도 적용
+    final opacity = widget.todo.isDone ? 0.5 : 1.0;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.paddingMedium,
         vertical: AppDimensions.paddingSmall,
       ),
       decoration: BoxDecoration(
-        color: color.withAlpha(26),
+        color: color.withAlpha((26 * opacity).round()),
         borderRadius: BorderRadius.circular(AppDimensions.radiusSmall),
-        border: Border.all(color: color.withAlpha(77), width: 1),
+        border: Border.all(
+          color: color.withAlpha((77 * opacity).round()),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 12, color: color.withValues(alpha: opacity)),
           const SizedBox(width: AppDimensions.paddingSmall),
           Text(
             name,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: color,
+              color: color.withValues(alpha: opacity),
             ),
           ),
         ],
@@ -204,11 +231,26 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
   Widget _buildInfoRow(IconData icon, String text, AppColors? colors) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: colors?.textSecondary),
+        Icon(
+          icon,
+          size: 14,
+          color: widget.todo.isDone
+              ? Colors
+                    .grey
+                    .shade400 // 완료된 할 일의 아이콘도 회색
+              : colors?.textSecondary,
+        ),
         const SizedBox(width: AppDimensions.paddingSmall),
         Text(
           text,
-          style: TextStyle(fontSize: 12, color: colors?.textSecondary),
+          style: TextStyle(
+            fontSize: 12,
+            color: widget.todo.isDone
+                ? Colors
+                      .grey
+                      .shade400 // 완료된 할 일의 텍스트도 회색
+                : colors?.textSecondary,
+          ),
         ),
       ],
     );
@@ -221,7 +263,11 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
         description,
         style: TextStyle(
           fontSize: 12,
-          color: colors?.textSecondary,
+          color: widget.todo.isDone
+              ? Colors
+                    .grey
+                    .shade400 // 완료된 할 일의 설명도 회색
+              : colors?.textSecondary,
           fontStyle: FontStyle.italic,
         ),
         maxLines: 2,

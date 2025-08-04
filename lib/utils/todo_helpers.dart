@@ -70,6 +70,40 @@ class TodoHelpers {
     return priorityInfo[priority] ?? priorityInfo[TodoPriority.medium]!;
   }
 
+  // 우선순위 비교 함수 (높은 우선순위가 먼저)
+  static int comparePriority(TodoPriority a, TodoPriority b) {
+    final priorityOrder = {
+      TodoPriority.urgent: 4, // 긴급 (가장 높음)
+      TodoPriority.high: 3, // 높음
+      TodoPriority.medium: 2, // 보통
+      TodoPriority.low: 1, // 낮음 (가장 낮음)
+    };
+
+    return priorityOrder[b]!.compareTo(priorityOrder[a]!);
+  }
+
+  // Todo 리스트를 우선순위별로 정렬
+  static List<Todo> sortTodosByPriority(List<Todo> todos) {
+    final sortedTodos = List<Todo>.from(todos);
+    sortedTodos.sort((a, b) {
+      // 1. 우선순위로 정렬 (높은 우선순위가 먼저)
+      final priorityComparison = comparePriority(a.priority, b.priority);
+      if (priorityComparison != 0) {
+        return priorityComparison;
+      }
+
+      // 2. 우선순위가 같으면 완료 상태로 정렬 (미완료가 먼저)
+      if (a.isDone != b.isDone) {
+        return a.isDone ? 1 : -1;
+      }
+
+      // 3. 완료 상태가 같으면 생성 시간으로 정렬 (최신이 먼저)
+      return b.createdAt.compareTo(a.createdAt);
+    });
+
+    return sortedTodos;
+  }
+
   // 날짜 포맷팅
   static String formatDate(DateTime date) {
     final now = DateTime.now();
