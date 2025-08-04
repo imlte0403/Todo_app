@@ -4,8 +4,12 @@ import '../utils/todo_helpers.dart';
 import '../theme/app_theme.dart';
 import '../utils/constants.dart';
 
+/// 할 일 추가/수정 다이얼로그 위젯
+///
+/// 새로운 할 일을 추가하거나 기존 할 일을 수정할 수 있는 다이얼로그입니다.
+/// 할 일 제목, 설명, 카테고리, 우선순위, 마감일을 입력받을 수 있습니다.
 class AddTodoDialog extends StatefulWidget {
-  final Todo? todo; // For editing
+  final Todo? todo; // 수정할 할 일 객체 (새로 추가할 때는 null)
 
   const AddTodoDialog({super.key, this.todo});
 
@@ -14,9 +18,11 @@ class AddTodoDialog extends StatefulWidget {
 }
 
 class _AddTodoDialogState extends State<AddTodoDialog> {
+  // 텍스트 입력 컨트롤러들
   final TextEditingController _taskController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
+  // 선택된 옵션들
   TodoCategory _selectedCategory = TodoCategory.other;
   TodoPriority _selectedPriority = TodoPriority.medium;
   DateTime? _selectedDueDate;
@@ -24,6 +30,7 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
   @override
   void initState() {
     super.initState();
+    // 수정 모드일 때 기존 데이터로 초기화
     if (widget.todo != null) {
       _taskController.text = widget.todo!.task;
       _descriptionController.text = widget.todo!.description ?? '';
@@ -35,6 +42,7 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
 
   @override
   void dispose() {
+    // 컨트롤러 정리
     _taskController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -43,7 +51,7 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>();
-    final isEditing = widget.todo != null;
+    final isEditing = widget.todo != null; // 수정 모드인지 확인
 
     return Dialog(
       shape: RoundedRectangleBorder(
@@ -56,6 +64,7 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 다이얼로그 제목
               Text(
                 isEditing ? 'Edit Todo' : 'New Todo',
                 style: TextStyle(
@@ -66,6 +75,7 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
               ),
               const SizedBox(height: AppDimensions.paddingExtraLarge),
 
+              // 할 일 제목 입력 필드
               TextField(
                 key: WidgetKeys.taskTextField,
                 controller: _taskController,
@@ -79,10 +89,11 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
                     ),
                   ),
                 ),
-                autofocus: true,
+                autofocus: true, // 자동 포커스
               ),
               const SizedBox(height: AppDimensions.paddingLarge),
 
+              // 할 일 설명 입력 필드 (선택사항)
               TextField(
                 key: WidgetKeys.descriptionTextField,
                 controller: _descriptionController,
@@ -99,7 +110,7 @@ class _AddTodoDialogState extends State<AddTodoDialog> {
                     ),
                   ),
                 ),
-                maxLines: 3,
+                maxLines: 3, // 여러 줄 입력 가능
               ),
               const SizedBox(height: AppDimensions.paddingLarge),
 

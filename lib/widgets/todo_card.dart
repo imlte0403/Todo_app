@@ -5,11 +5,16 @@ import '../providers/todo_provider.dart';
 import '../utils/todo_helpers.dart';
 import '../theme/app_theme.dart';
 
+/// 개별 할 일 항목을 표시하는 카드 위젯
+///
+/// 할 일의 제목, 설명, 카테고리, 우선순위, 마감일을 표시하고
+/// 완료 상태에 따라 시각적 피드백을 제공합니다.
+/// 완료된 할 일은 회색 처리되고 투명도가 적용됩니다.
 class TodoCard extends StatefulWidget {
-  final Todo todo;
-  final TodoProvider todoProvider;
-  final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
+  final Todo todo; // 표시할 할 일 객체
+  final TodoProvider todoProvider; // 상태 관리를 위한 Provider
+  final VoidCallback? onEdit; // 수정 버튼 콜백
+  final VoidCallback? onDelete; // 삭제 버튼 콜백
 
   const TodoCard({
     super.key,
@@ -31,30 +36,41 @@ class _TodoCardState extends State<TodoCard>
   @override
   void initState() {
     super.initState();
+    // 카드 등장 애니메이션 컨트롤러 초기화
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+    // 스케일 애니메이션 설정 (0.9에서 1.0으로 확대)
     _scaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
     );
+    // 애니메이션 시작
     _animationController.forward();
   }
 
   @override
   void dispose() {
+    // 애니메이션 컨트롤러 정리
     _animationController.dispose();
     super.dispose();
   }
 
   // 완료 상태 헬퍼 메서드들
-  bool get _isDone => widget.todo.isDone;
-  double get _opacity => TodoHelpers.getCompletedOpacity(_isDone);
-  double get _tagOpacity => TodoHelpers.getCompletedTagOpacity(_isDone);
-  Color _getCompletedColor(Color? originalColor) => 
-      TodoHelpers.getCompletedColor(originalColor ?? Colors.black87, _isDone);
-  Color _getCompletedIconColor(Color? originalColor) => 
-      TodoHelpers.getCompletedIconColor(originalColor ?? Colors.grey.shade600, _isDone);
+  bool get _isDone => widget.todo.isDone; // 할 일 완료 상태
+  double get _opacity => TodoHelpers.getCompletedOpacity(_isDone); // 카드 투명도
+  double get _tagOpacity =>
+      TodoHelpers.getCompletedTagOpacity(_isDone); // 태그 투명도
+  Color _getCompletedColor(Color? originalColor) =>
+      TodoHelpers.getCompletedColor(
+        originalColor ?? Colors.black87,
+        _isDone,
+      ); // 완료된 텍스트 색상
+  Color _getCompletedIconColor(Color? originalColor) =>
+      TodoHelpers.getCompletedIconColor(
+        originalColor ?? Colors.grey.shade600,
+        _isDone,
+      ); // 완료된 아이콘 색상
 
   @override
   Widget build(BuildContext context) {
